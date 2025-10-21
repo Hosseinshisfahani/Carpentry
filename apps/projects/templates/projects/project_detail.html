@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ project.title }} - جزئیات پروژه</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tahoma', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e1e8ed;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .project-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .project-info {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .project-description {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #e1e8ed;
+        }
+
+        .project-description h3 {
+            color: #2c3e50;
+            font-size: 20px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .project-description p {
+            color: #7f8c8d;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        .project-meta {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #e1e8ed;
+            height: fit-content;
+        }
+
+        .project-meta h3 {
+            color: #2c3e50;
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .meta-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        .meta-item:last-child {
+            border-bottom: none;
+        }
+
+        .meta-label {
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+
+        .meta-value {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 20px;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .project-info {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'projects:project_list' %}" class="back-link">
+            ← بازگشت به لیست پروژه‌ها
+        </a>
+
+        <div class="header">
+            <h1>{{ project.title }}</h1>
+            <div class="header-actions">
+                <a href="{% url 'projects:project_edit' project.pk %}" class="btn btn-secondary">
+                    ویرایش پروژه
+                </a>
+                <a href="{% url 'projects:project_delete' project.pk %}" class="btn btn-danger">
+                    حذف پروژه
+                </a>
+            </div>
+        </div>
+
+        {% if project.image %}
+            <img src="{{ project.image.url }}" alt="{{ project.title }}" class="project-image">
+        {% endif %}
+
+        <div class="project-info">
+            <div class="project-description">
+                <h3>توضیحات پروژه</h3>
+                <p>{{ project.description }}</p>
+            </div>
+
+            <div class="project-meta">
+                <h3>اطلاعات پروژه</h3>
+                <div class="meta-item">
+                    <span class="meta-label">ایجاد شده:</span>
+                    <span class="meta-value">{{ project.created_at|date:"Y/m/d H:i" }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">آخرین بروزرسانی:</span>
+                    <span class="meta-value">{{ project.updated_at|date:"Y/m/d H:i" }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">ایجاد کننده:</span>
+                    <span class="meta-value">{{ project.user.username }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">شناسه پروژه:</span>
+                    <span class="meta-value">#{{ project.pk }}</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

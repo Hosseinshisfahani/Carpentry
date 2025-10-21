@@ -1,0 +1,212 @@
+@import url('https://fonts.googleapis.com/css2?family=Shabnam:wght@400;500;600;700;800;900&family=Vazirmatn:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+:root {
+  font-family: 'Vazirmatn', 'Shabnam', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: #2E1C13; /* Dark cocoa text */
+  background-color: #F7EFE5; /* Birch cream background */
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-stroke: 0.01em transparent;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #F7EFE5; /* Birch cream - warm, natural background */
+  font-family: 'Vazirmatn', 'Shabnam', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Organic Animations - Handcrafted Motion */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes gentleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes organicPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+/* Utility Classes - Organic Timing */
+.fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.slide-in-right {
+  animation: slideInFromRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.slide-in-left {
+  animation: slideInFromLeft 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Custom Scrollbar - Warm Wood Tones */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F7EFE5; /* Birch cream */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #6B4226, #C49A6C); /* Walnut to oak */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2E1C13, #6B4226); /* Dark cocoa to walnut */
+}
+
+/* Selection - Warm Brown */
+::selection {
+  background: rgba(107, 66, 38, 0.2); /* Walnut with transparency */
+  color: #2E1C13; /* Dark cocoa */
+}
+
+/* Focus styles - Amber accent */
+*:focus-visible {
+  outline: 2px solid #E6CBA8; /* Pale amber */
+  outline-offset: 2px;
+}
+
+/* Loading skeleton - Warm tones */
+.skeleton {
+  background: linear-gradient(90deg, #F7EFE5 25%, #FFF8F0 50%, #F7EFE5 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Glass morphism effect - Warm wood */
+.glass {
+  background: rgba(255, 248, 240, 0.25); /* Ivory wood with transparency */
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(107, 66, 38, 0.18); /* Walnut border */
+}
+
+/* Gradient text - Wood tones */
+.gradient-text {
+  background: linear-gradient(135deg, #6B4226 0%, #C49A6C 100%); /* Walnut to oak */
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Hover effects - Organic motion */
+.hover-lift {
+  transition: transform 0.22s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.22s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(107, 66, 38, 0.15), 0 4px 8px rgba(107, 66, 38, 0.1);
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 13px;
+  }
+}
+
+/* Print styles */
+@media print {
+  * {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}
