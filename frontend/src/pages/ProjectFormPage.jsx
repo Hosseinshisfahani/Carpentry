@@ -10,8 +10,18 @@ import {
   Alert,
   CircularProgress,
   Grid,
+  Card,
+  CardContent,
+  IconButton,
+  Chip,
 } from '@mui/material';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { 
+  ArrowBack as ArrowBackIcon,
+  CloudUpload as CloudUploadIcon,
+  Image as ImageIcon,
+  Delete as DeleteIcon,
+  CheckCircle as CheckCircleIcon,
+} from '@mui/icons-material';
 import { projectService } from '../services/projectService';
 
 const ProjectFormPage = () => {
@@ -27,6 +37,7 @@ const ProjectFormPage = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
     if (isEdit) {
@@ -52,10 +63,22 @@ const ProjectFormPage = () => {
     const { name, value, files } = e.target;
     
     if (name === 'image') {
+      const file = files[0] || null;
       setFormData(prev => ({
         ...prev,
-        [name]: files[0] || null
+        [name]: file
       }));
+      
+      // Create preview URL
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setImagePreview(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setImagePreview(null);
+      }
     } else {
       setFormData(prev => ({
         ...prev,
@@ -70,6 +93,14 @@ const ProjectFormPage = () => {
         [name]: ''
       }));
     }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData(prev => ({
+      ...prev,
+      image: null
+    }));
+    setImagePreview(null);
   };
 
   const handleSubmit = async (e) => {
@@ -251,16 +282,164 @@ const ProjectFormPage = () => {
               </Grid>
 
               <Grid size={12}>
-                <TextField
-                  fullWidth
-                  label="تصویر پروژه"
-                  name="image"
-                  type="file"
-                  inputProps={{ accept: 'image/*' }}
-                  onChange={handleChange}
-                  error={!!errors.image}
-                  helperText={errors.image}
-                />
+                <Card
+                  sx={{
+                    border: '2px dashed',
+                    borderColor: imagePreview ? 'success.main' : 'grey.300',
+                    borderRadius: 3,
+                    backgroundColor: imagePreview ? 'rgba(76, 175, 80, 0.05)' : 'rgba(139, 69, 19, 0.02)',
+                    transition: 'all 0.3s ease',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&:hover': {
+                      borderColor: imagePreview ? 'success.dark' : 'primary.main',
+                      backgroundColor: imagePreview ? 'rgba(76, 175, 80, 0.1)' : 'rgba(139, 69, 19, 0.05)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.1)',
+                    },
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    {imagePreview ? (
+                      <Box>
+                        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <CheckCircleIcon color="success" />
+                            <Typography variant="h6" color="success.main" fontWeight={600}>
+                              تصویر انتخاب شده
+                            </Typography>
+                          </Box>
+                          <IconButton
+                            onClick={handleRemoveImage}
+                            color="error"
+                            sx={{
+                              backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                              '&:hover': {
+                                backgroundColor: 'rgba(244, 67, 54, 0.2)',
+                              },
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Box>
+                        
+                        <Box
+                          sx={{
+                            position: 'relative',
+                            borderRadius: 2,
+                            overflow: 'hidden',
+                            border: '1px solid rgba(0, 0, 0, 0.1)',
+                            backgroundColor: 'white',
+                          }}
+                        >
+                          <img
+                            src={imagePreview}
+                            alt="پیش‌نمایش تصویر"
+                            style={{
+                              width: '100%',
+                              height: '200px',
+                              objectFit: 'cover',
+                              display: 'block',
+                            }}
+                          />
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: 8,
+                              right: 8,
+                              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                              color: 'white',
+                              px: 1,
+                              py: 0.5,
+                              borderRadius: 1,
+                              fontSize: '0.75rem',
+                            }}
+                          >
+                            {formData.image?.name}
+                          </Box>
+                        </Box>
+                        
+                        <Box mt={2} display="flex" gap={1} flexWrap="wrap">
+                          <Chip
+                            icon={<ImageIcon />}
+                            label={`${(formData.image?.size / 1024 / 1024).toFixed(2)} MB`}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                          />
+                          <Chip
+                            label={formData.image?.type || 'نوع فایل نامشخص'}
+                            size="small"
+                            color="secondary"
+                            variant="outlined"
+                          />
+                        </Box>
+                      </Box>
+                    ) : (
+                      <Box textAlign="center">
+                        <Box
+                          sx={{
+                            width: 80,
+                            height: 80,
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #8b4513 0%, #d2691e 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 16px',
+                            boxShadow: '0 4px 20px rgba(139, 69, 19, 0.3)',
+                          }}
+                        >
+                          <CloudUploadIcon sx={{ fontSize: 40, color: 'white' }} />
+                        </Box>
+                        
+                        <Typography variant="h6" gutterBottom fontWeight={600}>
+                          تصویر پروژه را انتخاب کنید
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" mb={3}>
+                          فایل‌های JPG، PNG، GIF تا حداکثر 10 مگابایت
+                        </Typography>
+                        
+                        <input
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          id="image-upload"
+                          type="file"
+                          name="image"
+                          onChange={handleChange}
+                        />
+                        <label htmlFor="image-upload">
+                          <Button
+                            variant="contained"
+                            component="span"
+                            startIcon={<ImageIcon />}
+                            sx={{
+                              borderRadius: 3,
+                              px: 4,
+                              py: 1.5,
+                              fontSize: '1rem',
+                              fontWeight: 600,
+                              background: 'linear-gradient(135deg, #8b4513 0%, #d2691e 100%)',
+                              '&:hover': {
+                                background: 'linear-gradient(135deg, #a0522d 0%, #cd853f 100%)',
+                                transform: 'translateY(-2px)',
+                                boxShadow: '0 8px 25px rgba(139, 69, 19, 0.4)',
+                              },
+                            }}
+                          >
+                            انتخاب فایل
+                          </Button>
+                        </label>
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                {errors.image && (
+                  <Typography variant="body2" color="error" sx={{ mt: 1, ml: 2 }}>
+                    {errors.image}
+                  </Typography>
+                )}
               </Grid>
 
             </Grid>

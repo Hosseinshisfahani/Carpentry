@@ -201,6 +201,15 @@ body {
   }
 }
 
+/* Fix AppBar rounded corners */
+.MuiAppBar-root {
+  border-radius: 0 !important;
+}
+
+.MuiAppBar-root .MuiToolbar-root {
+  border-radius: 0 !important;
+}
+
 /* Print styles */
 @media print {
   * {

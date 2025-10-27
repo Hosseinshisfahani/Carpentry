@@ -130,6 +130,33 @@ const Navigation = () => {
         sx={{
           background: 'linear-gradient(135deg, #6B4226 0%, #4A2F1A 100%)',
           borderBottom: '1px solid rgba(255, 248, 240, 0.1)',
+          borderRadius: '0 !important',
+          minHeight: '64px',
+          width: '100%',
+          left: 0,
+          right: 0,
+          '&.MuiAppBar-root': {
+            borderRadius: '0 !important',
+          },
+          '& .MuiToolbar-root': {
+            borderRadius: '0 !important',
+            background: 'transparent',
+            minHeight: '64px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
+            width: '100%',
+          },
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(135deg, #6B4226 0%, #4A2F1A 100%)',
+            borderRadius: '0 !important',
+            zIndex: -1,
+          },
         }}
       >
         <Toolbar>
