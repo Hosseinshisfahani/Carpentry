@@ -7,8 +7,21 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse
 from .models import Project
-from .serializers import ProjectSerializer
+from .serializers import ProjectSerializer, BinPackingInputSerializer, BinPackingOutputSerializer
 from .forms import ProjectForm
+import base64
+import io
+import threading
+
+# Force headless backend before importing pyplot
+import matplotlib
+matplotlib.use("Agg")     # <- crucial on servers
+import matplotlib.pyplot as plt
+plt.ioff()  # Turn interactive off
+from copy import copy
+
+# Optional: simple lock so concurrent requests don't step on pyplot state
+_PLOT_LOCK = threading.Lock()
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -28,6 +41,92 @@ class ProjectViewSet(viewsets.ModelViewSet):
         projects = self.get_queryset()
         serializer = self.get_serializer(projects, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['post'])
+    def bin_pack(self, request):
+        """Perform 2D bin packing optimization using external library"""
+        try:
+            # Import bin packing library
+            from BinPacker import BinPacker
+            from Configuration import Configuration
+            
+            # Validate input
+            input_serializer = BinPackingInputSerializer(data=request.data)
+            if not input_serializer.is_valid():
+                return Response(input_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+            validated = input_serializer.validated_data
+            W = int(validated['container_width'])
+            H = int(validated['container_height'])
+            rects = [(int(r['width']), int(r['height'])) for r in validated['rectangles']]
+            
+            # Enable plotting so util.* actually draws
+            C = Configuration(
+                size=(W, H),
+                unpacked_rects=copy(rects),
+                enable_plotting=True,  # <-- was False
+            )
+            packer = BinPacker(C)
+            C = packer.PackConfiguration(C)
+            
+            # Quick sanity checks (add temporarily)
+            print("packed:", len(getattr(C, "packed_rects", [])), "W,H:", W, H)
+            
+            # --- Generate visualization data for frontend SVG rendering ---
+            def serialize_concave_corners(corners):
+                """Serialize concave corners similar to save_points from util.py"""
+                return [
+                    {
+                        "x": corner[0][0],
+                        "y": corner[0][1],
+                        "type": corner[1].name if hasattr(corner[1], "name") else str(corner[1])
+                    }
+                    for corner in corners
+                ]
+            
+            # Extract visualization data
+            visualization_data = {
+                'container': {'width': W, 'height': H},
+                'packed_rects': [{
+                    'x': r.origin[0],
+                    'y': r.origin[1],
+                    'width': r.width,
+                    'height': r.height,
+                    'rotated': getattr(r, 'rotated', False),
+                } for r in getattr(C, 'packed_rects', [])],
+                'unpacked_rects': [{'width': w, 'height': h} for w, h in getattr(C, 'unpacked_rects', [])],
+                'concave_corners': serialize_concave_corners(getattr(C, 'concave_corners', [])),
+                'all_input_rects': [{'width': w, 'height': h} for w, h in rects]
+            }
+            
+            # Extract packed rectangles
+            packed_rectangles = [{
+                'x': r.origin[0],
+                'y': r.origin[1],
+                'width': r.width,
+                'height': r.height,
+                'rotated': getattr(r, 'rotated', False),
+            } for r in getattr(C, 'packed_rects', [])]
+            
+            return Response({
+                'success': C.is_successful(),
+                'density': C.density(),
+                'packed_rectangles': packed_rectangles,
+                'visualization': visualization_data,
+                'message': 'چیدمان با موفقیت تکمیل شد' if C.is_successful()
+                           else f'چیدمان ناقص است. {len(C.unpacked_rects)} قطعه قابل چیدمان نبود.',
+            }, status=status.HTTP_200_OK)
+                
+        except ImportError as e:
+            return Response(
+                {'error': f'کتابخانه بهینه‌سازی چیدمان در دسترس نیست: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'بهینه‌سازی چیدمان ناموفق بود: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 # Function-based views for template rendering

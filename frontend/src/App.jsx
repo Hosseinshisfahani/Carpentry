@@ -12,6 +12,7 @@ import HomePage from './pages/HomePage';
 import ProjectListPage from './pages/ProjectListPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import ProjectFormPage from './pages/ProjectFormPage';
+import BinPackingPage from './pages/BinPackingPage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -98,6 +99,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ProjectFormPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/bin-packing" 
+              element={
+                <ProtectedRoute>
+                  <BinPackingPage />
                 </ProtectedRoute>
               } 
             />

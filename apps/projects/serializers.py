@@ -38,3 +38,46 @@ class ProjectSerializer(serializers.ModelSerializer):
             if request and hasattr(request, 'user'):
                 validated_data['user'] = request.user
         return super().create(validated_data)
+
+
+class RectangleSerializer(serializers.Serializer):
+    """Serializer for individual rectangle dimensions"""
+    width = serializers.FloatField(min_value=0.1)
+    height = serializers.FloatField(min_value=0.1)
+
+
+class BinPackingInputSerializer(serializers.Serializer):
+    """Serializer for bin packing input data"""
+    container_width = serializers.FloatField(min_value=1.0)
+    container_height = serializers.FloatField(min_value=1.0)
+    rectangles = RectangleSerializer(many=True, min_length=1)
+    
+    def validate_rectangles(self, value):
+        """Validate that rectangles fit within container"""
+        container_width = float(self.initial_data.get('container_width', 0))
+        container_height = float(self.initial_data.get('container_height', 0))
+        
+        for rect in value:
+            if rect['width'] > container_width or rect['height'] > container_height:
+                raise serializers.ValidationError(
+                    f"قطعه {rect['width']}x{rect['height']} برای ظرف {container_width}x{container_height} بسیار بزرگ است"
+                )
+        return value
+
+
+class PackedRectangleSerializer(serializers.Serializer):
+    """Serializer for packed rectangle result"""
+    x = serializers.FloatField()
+    y = serializers.FloatField()
+    width = serializers.FloatField()
+    height = serializers.FloatField()
+    rotated = serializers.BooleanField()
+
+
+class BinPackingOutputSerializer(serializers.Serializer):
+    """Serializer for bin packing output data"""
+    success = serializers.BooleanField()
+    density = serializers.FloatField()
+    packed_rectangles = PackedRectangleSerializer(many=True)
+    image_base64 = serializers.CharField(allow_blank=True)
+    message = serializers.CharField(allow_blank=True)

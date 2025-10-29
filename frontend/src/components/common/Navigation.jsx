@@ -28,6 +28,7 @@ import {
   Home as HomeIcon,
   Analytics as AnalyticsIcon,
   Settings as SettingsIcon,
+  GridView as BinPackingIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -61,6 +62,7 @@ const Navigation = () => {
   const navigationItems = [
     { label: 'خانه', path: '/', icon: <HomeIcon /> },
     { label: 'پروژه‌ها', path: '/projects', icon: <ProjectIcon /> },
+    { label: 'بهینه‌سازی چیدمان', path: '/bin-packing', icon: <BinPackingIcon /> },
     { label: 'گزارش‌ها', path: '/analytics', icon: <AnalyticsIcon /> },
     { label: 'تنظیمات', path: '/settings', icon: <SettingsIcon /> },
   ];

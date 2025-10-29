@@ -11,9 +11,16 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import sys
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Add bin-packing library to Python path
+BIN_PACKING_LIB_PATH = '/Users/hossein.sh.isfahani/projects/bin-packing'
+if BIN_PACKING_LIB_PATH not in sys.path:
+    sys.path.insert(0, BIN_PACKING_LIB_PATH)
 
 
 # Quick-start development settings - unsuitable for production
