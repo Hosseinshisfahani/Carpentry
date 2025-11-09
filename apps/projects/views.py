@@ -1,13 +1,14 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse
-from .models import Project
-from .serializers import ProjectSerializer, BinPackingInputSerializer, BinPackingOutputSerializer
+from django.db.models import Count, Q, Exists, OuterRef
+from .models import Project, BinPackingReport
+from .serializers import ProjectSerializer, BinPackingInputSerializer, BinPackingOutputSerializer, BinPackingReportSerializer
 from .forms import ProjectForm
 import base64
 import io
@@ -127,6 +128,54 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 {'error': f'بهینه‌سازی چیدمان ناموفق بود: {str(e)}'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+    
+    @action(detail=True, methods=['post'])
+    def save_report(self, request, pk=None):
+        """Save a bin packing report for a project"""
+        project = self.get_object()
+        
+        # Ensure user owns the project
+        if project.user != request.user:
+            return Response(
+                {'error': 'You do not have permission to save reports for this project'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Get report data from request
+        report_data = {
+            'project': project.id,
+            'name': request.data.get('name', f'گزارش {BinPackingReport.objects.filter(project=project).count() + 1}'),
+            'container_width': request.data.get('container_width'),
+            'container_height': request.data.get('container_height'),
+            'rectangles': request.data.get('rectangles', []),
+            'packed_rectangles': request.data.get('packed_rectangles', []),
+            'visualization': request.data.get('visualization', {}),
+            'density': request.data.get('density', 0),
+            'success': request.data.get('success', False),
+            'message': request.data.get('message', ''),
+        }
+        
+        serializer = BinPackingReportSerializer(data=report_data, context={'request': request})
+        if serializer.is_valid():
+            report = serializer.save()
+            return Response(BinPackingReportSerializer(report, context={'request': request}).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['get'])
+    def reports(self, request, pk=None):
+        """Get all bin packing reports for a project"""
+        project = self.get_object()
+        
+        # Ensure user owns the project
+        if project.user != request.user:
+            return Response(
+                {'error': 'You do not have permission to view reports for this project'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        reports = BinPackingReport.objects.filter(project=project).order_by('-created_at')
+        serializer = BinPackingReportSerializer(reports, many=True, context={'request': request})
+        return Response(serializer.data)
 
 
 # Function-based views for template rendering
@@ -184,3 +233,32 @@ def project_delete(request, pk):
         messages.success(request, 'پروژه با موفقیت حذف شد!')
         return redirect('projects:project_list')
     return render(request, 'projects/project_confirm_delete.html', {'project': project})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_statistics(request):
+    """Get dashboard statistics for the current user"""
+    user = request.user
+    
+    # Get all projects for the user
+    all_projects = Project.objects.filter(user=user)
+    total_projects = all_projects.count()
+    
+    # Projects with at least one successful report are considered "completed"
+    completed_projects = all_projects.filter(
+        bin_packing_reports__success=True
+    ).distinct().count()
+    
+    # Projects without any successful reports are considered "pending"
+    # This includes projects with no reports or only failed reports
+    projects_with_success = all_projects.filter(
+        bin_packing_reports__success=True
+    ).values_list('id', flat=True)
+    pending_projects = all_projects.exclude(id__in=projects_with_success).count()
+    
+    return Response({
+        'active_projects': total_projects,
+        'completed': completed_projects,
+        'pending': pending_projects,
+    }, status=status.HTTP_200_OK)

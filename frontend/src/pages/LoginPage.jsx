@@ -9,8 +9,15 @@ import {
   Box,
   Alert,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { useAuth } from '../contexts/AuthContext';
+import { authService } from '../services/authService';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -20,6 +27,13 @@ const LoginPage = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  
+  // Password reset states
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMessage, setResetMessage] = useState('');
+  const [resetError, setResetError] = useState('');
   
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -62,6 +76,39 @@ const LoginPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleResetRequest = async (e) => {
+    e.preventDefault();
+    setResetLoading(true);
+    setResetError('');
+    setResetMessage('');
+
+    try {
+      const response = await authService.requestPasswordReset(resetEmail);
+      setResetMessage(response.message || 'اگر ایمیل شما در سیستم ثبت شده باشد، لینک بازیابی رمز عبور به ایمیل شما ارسال شد.');
+      setResetEmail('');
+    } catch (error) {
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        if (typeof errorData === 'object') {
+          setResetError(errorData.email || errorData.non_field_errors || 'خطایی رخ داده است.');
+        } else {
+          setResetError(errorData);
+        }
+      } else {
+        setResetError('خطایی رخ داده است. لطفاً دوباره تلاش کنید.');
+      }
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleCloseResetDialog = () => {
+    setResetDialogOpen(false);
+    setResetEmail('');
+    setResetError('');
+    setResetMessage('');
   };
 
   return (
@@ -212,6 +259,26 @@ const LoginPage = () => {
               }}
             />
 
+            <Box textAlign="center" mt={2}>
+              <Button
+                onClick={() => setResetDialogOpen(true)}
+                sx={{
+                  color: '#8b4513',
+                  textTransform: 'none',
+                  fontSize: '0.95rem',
+                  fontWeight: 500,
+                  padding: 0,
+                  minWidth: 'auto',
+                  '&:hover': {
+                    backgroundColor: 'transparent',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                بازیابی رمز عبور
+              </Button>
+            </Box>
+
             <Button
               type="submit"
               fullWidth
@@ -280,6 +347,132 @@ const LoginPage = () => {
           </Box>
         </Paper>
       </Container>
+
+      {/* Password Reset Dialog */}
+      <Dialog 
+        open={resetDialogOpen} 
+        onClose={handleCloseResetDialog}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            direction: 'rtl',
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          pb: 1,
+          background: 'linear-gradient(135deg, #8b4513 0%, #d2691e 100%)',
+          color: 'white',
+        }}>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            بازیابی رمز عبور
+          </Typography>
+          <IconButton
+            onClick={handleCloseResetDialog}
+            sx={{ color: 'white' }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          {resetMessage ? (
+            <Alert 
+              severity="success" 
+              sx={{ 
+                mb: 2,
+                borderRadius: 2,
+              }}
+            >
+              {resetMessage}
+            </Alert>
+          ) : (
+            <>
+              <Typography variant="body1" sx={{ mb: 3, color: 'text.secondary' }}>
+                لطفاً ایمیل خود را وارد کنید. لینک بازیابی رمز عبور به ایمیل شما ارسال خواهد شد.
+              </Typography>
+              
+              {resetError && (
+                <Alert 
+                  severity="error" 
+                  sx={{ 
+                    mb: 2,
+                    borderRadius: 2,
+                  }}
+                >
+                  {resetError}
+                </Alert>
+              )}
+
+              <form onSubmit={handleResetRequest}>
+                <TextField
+                  fullWidth
+                  label="ایمیل"
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => {
+                    setResetEmail(e.target.value);
+                    setResetError('');
+                  }}
+                  margin="normal"
+                  required
+                  autoFocus
+                  disabled={resetLoading}
+                  sx={{
+                    '& .MuiInputLabel-root': {
+                      fontSize: '1rem',
+                      fontWeight: 500,
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      fontSize: '1rem',
+                      padding: '16px 14px',
+                    },
+                  }}
+                />
+                
+                <DialogActions sx={{ px: 0, pt: 3, pb: 1 }}>
+                  <Button
+                    onClick={handleCloseResetDialog}
+                    disabled={resetLoading}
+                    sx={{
+                      color: 'text.secondary',
+                      textTransform: 'none',
+                    }}
+                  >
+                    انصراف
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={resetLoading}
+                    sx={{
+                      backgroundColor: '#8b4513',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      '&:hover': {
+                        backgroundColor: '#654321',
+                      },
+                    }}
+                  >
+                    {resetLoading ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CircularProgress size={20} color="inherit" />
+                        <span>در حال ارسال...</span>
+                      </Box>
+                    ) : (
+                      'ارسال لینک بازیابی'
+                    )}
+                  </Button>
+                </DialogActions>
+              </form>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };

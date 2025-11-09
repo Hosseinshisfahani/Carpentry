@@ -47,4 +47,9 @@ export const projectService = {
     const response = await api.delete(`/projects/${id}/`);
     return response.data;
   },
+
+  async getDashboardStatistics() {
+    const response = await api.get('/dashboard/statistics/');
+    return response.data;
+  },
 };

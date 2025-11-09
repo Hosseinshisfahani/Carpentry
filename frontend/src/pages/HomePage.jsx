@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Container,
@@ -13,6 +13,7 @@ import {
   Avatar,
   useTheme,
   useMediaQuery,
+  CircularProgress,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -28,11 +29,41 @@ import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/common/Navigation';
 import StatsCard from '../components/common/StatsCard';
 import FeatureCard from '../components/common/FeatureCard';
+import { projectService } from '../services/projectService';
 
 const HomePage = () => {
   const { user } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [stats, setStats] = useState([
+    { label: 'پروژه‌های فعال', value: '0', icon: <ProjectIcon /> },
+    { label: 'تکمیل شده', value: '0', icon: <CheckIcon /> },
+    { label: 'در انتظار', value: '0', icon: <ScheduleIcon /> },
+  ]);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        setStatsLoading(true);
+        const data = await projectService.getDashboardStatistics();
+        setStats([
+          { label: 'پروژه‌های فعال', value: data.active_projects?.toString() || '0', icon: <ProjectIcon /> },
+          { label: 'تکمیل شده', value: data.completed?.toString() || '0', icon: <CheckIcon /> },
+          { label: 'در انتظار', value: data.pending?.toString() || '0', icon: <ScheduleIcon /> },
+        ]);
+      } catch (error) {
+        console.error('Error fetching dashboard statistics:', error);
+        // Keep default values on error
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchStatistics();
+    }
+  }, [user]);
 
   const features = [
     {
@@ -53,12 +84,6 @@ const HomePage = () => {
       description: 'گزارش‌های دقیق از پیشرفت و عملکرد پروژه‌ها',
       color: '#E6CBA8',
     },
-  ];
-
-  const stats = [
-    { label: 'پروژه‌های فعال', value: '12', icon: <ProjectIcon /> },
-    { label: 'تکمیل شده', value: '8', icon: <CheckIcon /> },
-    { label: 'در انتظار', value: '4', icon: <ScheduleIcon /> },
   ];
 
   return (
@@ -202,41 +227,47 @@ const HomePage = () => {
                     </Typography>
                   </Box>
                   
-                  <Grid container spacing={2}>
-                    {stats.map((stat, index) => (
-                      <Grid size={4} key={index}>
-                        <Box textAlign="center">
-                          <Box
-                            sx={{
-                              bgcolor: '#E6CBA8',
-                              borderRadius: '50%',
-                              width: 50,
-                              height: 50,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              mx: 'auto',
-                              mb: 1,
-                            }}
-                          >
-                            {stat.icon}
+                  {statsLoading ? (
+                    <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+                      <CircularProgress sx={{ color: '#6B4226' }} />
+                    </Box>
+                  ) : (
+                    <Grid container spacing={2}>
+                      {stats.map((stat, index) => (
+                        <Grid size={4} key={index}>
+                          <Box textAlign="center">
+                            <Box
+                              sx={{
+                                bgcolor: '#E6CBA8',
+                                borderRadius: '50%',
+                                width: 50,
+                                height: 50,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                mx: 'auto',
+                                mb: 1,
+                              }}
+                            >
+                              {stat.icon}
+                            </Box>
+                            <Typography
+                              variant="h4"
+                              sx={{ fontWeight: 700, color: '#6B4226' }}
+                            >
+                              {stat.value}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              sx={{ color: '#4A2F1A', fontSize: '0.75rem' }}
+                            >
+                              {stat.label}
+                            </Typography>
                           </Box>
-                          <Typography
-                            variant="h4"
-                            sx={{ fontWeight: 700, color: '#6B4226' }}
-                          >
-                            {stat.value}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{ color: '#4A2F1A', fontSize: '0.75rem' }}
-                          >
-                            {stat.label}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                    ))}
-                  </Grid>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  )}
                 </Paper>
               </Box>
             </Grid>

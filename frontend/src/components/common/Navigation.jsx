@@ -27,8 +27,8 @@ import {
   Menu as MenuIcon,
   Home as HomeIcon,
   Analytics as AnalyticsIcon,
-  Settings as SettingsIcon,
   GridView as BinPackingIcon,
+  Person as PersonIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -64,7 +64,7 @@ const Navigation = () => {
     { label: 'پروژه‌ها', path: '/projects', icon: <ProjectIcon /> },
     { label: 'بهینه‌سازی چیدمان', path: '/bin-packing', icon: <BinPackingIcon /> },
     { label: 'گزارش‌ها', path: '/analytics', icon: <AnalyticsIcon /> },
-    { label: 'تنظیمات', path: '/settings', icon: <SettingsIcon /> },
+    { label: 'پروفایل', path: '/profile', icon: <PersonIcon /> },
   ];
 
   const drawer = (
@@ -102,6 +102,26 @@ const Navigation = () => {
             <ListItemText primary={item.label} />
           </ListItem>
         ))}
+        
+        <ListItem
+          component={Link}
+          to="/profile"
+          onClick={handleDrawerToggle}
+          sx={{
+            color: '#6B4226',
+            borderRadius: 1,
+            mx: 1,
+            mt: 2,
+            '&:hover': {
+              bgcolor: 'rgba(107, 66, 38, 0.05)',
+            },
+          }}
+        >
+          <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+            <PersonIcon />
+          </ListItemIcon>
+          <ListItemText primary="پروفایل" />
+        </ListItem>
         
         <ListItem
           onClick={handleLogout}
@@ -244,7 +264,10 @@ const Navigation = () => {
               sx={{ color: '#FFF8F0' }}
               aria-label="حساب کاربری"
             >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: 'rgba(255, 248, 240, 0.2)' }}>
+              <Avatar 
+                src={user?.avatar_url} 
+                sx={{ width: 32, height: 32, bgcolor: 'rgba(255, 248, 240, 0.2)' }}
+              >
                 {user?.username?.charAt(0)?.toUpperCase()}
               </Avatar>
             </IconButton>
@@ -286,6 +309,16 @@ const Navigation = () => {
           },
         }}
       >
+        <MenuItem 
+          onClick={() => {
+            handleMenuClose();
+            navigate('/profile');
+          }}
+          sx={{ color: '#6B4226' }}
+        >
+          <PersonIcon sx={{ mr: 1 }} />
+          پروفایل
+        </MenuItem>
         <MenuItem onClick={handleLogout} sx={{ color: '#B8866B' }}>
           <LogoutIcon sx={{ mr: 1 }} />
           خروج

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Project
+from .models import Project, BinPackingReport
 from apps.registration.models import AbstractUser
 
 
@@ -37,6 +37,26 @@ class ProjectSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             if request and hasattr(request, 'user'):
                 validated_data['user'] = request.user
+        return super().create(validated_data)
+
+
+class BinPackingReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BinPackingReport
+        fields = [
+            'id', 'project', 'name', 'container_width', 'container_height',
+            'rectangles', 'packed_rectangles', 'visualization', 'density',
+            'success', 'message', 'created_at'
+        ]
+        read_only_fields = ['id', 'created_at']
+    
+    def create(self, validated_data):
+        # Project is set from the URL/view, ensure user owns the project
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            project = validated_data.get('project')
+            if project and project.user != request.user:
+                raise serializers.ValidationError("You don't have permission to create reports for this project.")
         return super().create(validated_data)
 
 

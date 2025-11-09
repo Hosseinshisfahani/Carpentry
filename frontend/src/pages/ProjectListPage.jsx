@@ -21,6 +21,7 @@ import {
   Visibility as ViewIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  Home as HomeIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { projectService } from '../services/projectService';
@@ -162,6 +163,20 @@ const ProjectListPage = () => {
               </Box>
             </Box>
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Button
+                variant="outlined"
+                startIcon={<HomeIcon />}
+                onClick={() => navigate('/')}
+                sx={{ 
+                  borderRadius: 3,
+                  px: 3,
+                  py: 1.5,
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                }}
+              >
+                بازگشت به صفحه اصلی
+              </Button>
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}

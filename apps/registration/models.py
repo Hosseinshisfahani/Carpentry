@@ -32,6 +32,7 @@ class AbstractUser(AbstractBaseUser):
     username = models.CharField(max_length=100, unique=True)
     email = models.EmailField(max_length=100, unique=True)
     phone = models.CharField(max_length=100, blank=True, null=True)
+    avatar = models.ImageField(upload_to='users/avatars/', blank=True, null=True)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)

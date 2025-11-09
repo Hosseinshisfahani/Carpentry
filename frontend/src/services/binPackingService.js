@@ -116,6 +116,78 @@ class BinPackingService {
       totalRectangles: result.packed_rectangles?.length || 0
     };
   }
+
+  /**
+   * Save a bin packing report for a project
+   * @param {number} projectId - Project ID
+   * @param {Object} containerSize - Container dimensions
+   * @param {Array} rectangles - Array of rectangle objects
+   * @param {Object} result - Packing result from formatResult
+   * @param {string} name - Optional report name
+   * @returns {Promise<Object>} Saved report data
+   */
+  async saveReport(projectId, containerSize, rectangles, result, name = null) {
+    try {
+      const reportData = {
+        name: name || `گزارش ${new Date().toLocaleDateString('fa-IR')}`,
+        container_width: parseFloat(containerSize.width),
+        container_height: parseFloat(containerSize.height),
+        rectangles: rectangles.map(rect => ({
+          width: parseFloat(rect.width),
+          height: parseFloat(rect.height)
+        })),
+        packed_rectangles: result.packedRectangles || [],
+        visualization: result.visualization || {},
+        density: result.density,
+        success: result.success,
+        message: result.message || '',
+      };
+
+      const response = await api.post(`/projects/${projectId}/save_report/`, reportData);
+      return response.data;
+    } catch (error) {
+      console.error('Save report API error:', error);
+      
+      if (error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+      } else if (error.response?.data) {
+        const errors = error.response.data;
+        if (typeof errors === 'object') {
+          const errorMessages = Object.entries(errors)
+            .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+            .join('; ');
+          throw new Error(`خطای اعتبارسنجی: ${errorMessages}`);
+        }
+        throw new Error(`خطای API: ${JSON.stringify(errors)}`);
+      } else if (error.request) {
+        throw new Error('خطای شبکه: امکان اتصال به سرور وجود ندارد');
+      } else {
+        throw new Error(`خطای درخواست: ${error.message}`);
+      }
+    }
+  }
+
+  /**
+   * Get all bin packing reports for a project
+   * @param {number} projectId - Project ID
+   * @returns {Promise<Array>} Array of report objects
+   */
+  async getReports(projectId) {
+    try {
+      const response = await api.get(`/projects/${projectId}/reports/`);
+      return response.data;
+    } catch (error) {
+      console.error('Get reports API error:', error);
+      
+      if (error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+      } else if (error.request) {
+        throw new Error('خطای شبکه: امکان اتصال به سرور وجود ندارد');
+      } else {
+        throw new Error(`خطای درخواست: ${error.message}`);
+      }
+    }
+  }
 }
 
 export const binPackingService = new BinPackingService();
