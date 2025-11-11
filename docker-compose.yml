@@ -1,0 +1,50 @@
+version: "3.7"
+
+services:
+  db:
+    image: postgres:16
+    container_name: pm_db
+    env_file:
+      - dependencies/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  web:
+    build:
+      context: ./dependencies
+      dockerfile: Dockerfile
+    container_name: pm_web
+    env_file:
+      - dependencies/.env
+    command: ./dependencies/entrypoint.sh
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app:delegated
+      - staticfiles:/app/staticfiles
+      - media:/app/media
+
+  frontend:
+    image: node:20
+    container_name: pm_frontend
+    working_dir: /app/frontend
+    environment:
+      VITE_API_URL: "${VITE_API_URL:-http://localhost:8000}"
+      HOST: 0.0.0.0
+      PORT: 5173
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    depends_on:
+      - web
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app:delegated
+
+volumes:
+  postgres_data:
+  staticfiles:
+  media:

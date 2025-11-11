@@ -1,6 +1,4 @@
-#!/bin/sh
-'''exec' "/Users/hossein.sh.isfahani/projects/Sadegh process/dependencies/venv/bin/python3" "$0" "$@"
-' '''
+#!/root/Sadegh/dependencies/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

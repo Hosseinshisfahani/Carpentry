@@ -13,9 +13,17 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import sys
 import os
+import socket
+from functools import lru_cache
+from typing import List
+
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file
+load_dotenv(str(BASE_DIR / 'dependencies' / '.env'))
 
 # Add bin-packing library to Python path
 BIN_PACKING_LIB_PATH = '/Users/hossein.sh.isfahani/projects/bin-packing'
@@ -26,13 +34,47 @@ if BIN_PACKING_LIB_PATH not in sys.path:
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
+def env_bool(name: str, default: bool = False) -> bool:
+    """Read an environment variable as a boolean."""
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def env_list(name: str, default: str = "") -> List[str]:
+    """Split a comma-separated environment variable into a list."""
+    raw = os.getenv(name, default)
+    return [item.strip() for item in raw.split(",") if item.strip()]
+
+
+def require_env(name: str) -> str:
+    """Fetch an environment variable or raise a clear error."""
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
+
+
+def _postgres_host() -> str:
+    """Resolve the configured Postgres host with a graceful fallback."""
+    host = os.getenv('POSTGRES_HOST', 'localhost')
+    if host in {'', None}:
+        return 'localhost'
+    try:
+        socket.gethostbyname(host)
+        return host
+    except socket.gaierror:
+        return 'localhost'
+
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-8j^me$b9aet@f!1(4a6*(#xep0(v*2^os8zp6wj6u-!*yhln)&'
+SECRET_KEY = require_env("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env_bool("DJANGO_DEBUG", default=True)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", default="localhost,127.0.0.1")
 
 
 # Application definition
@@ -85,12 +127,28 @@ WSGI_APPLICATION = 'carpentary.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'dependencies' / 'db.sqlite3',
+@lru_cache
+def _database_settings():
+    if os.getenv("POSTGRES_DB"):
+        return {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': require_env('POSTGRES_DB'),
+                'USER': require_env('POSTGRES_USER'),
+                'PASSWORD': require_env('POSTGRES_PASSWORD'),
+                'HOST': _postgres_host(),
+                'PORT': os.getenv('POSTGRES_PORT', '5432'),
+            }
+        }
+    return {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'dependencies' / 'db.sqlite3',
+        }
     }
-}
+
+
+DATABASES = _database_settings()
 
 
 # Password validation
@@ -150,23 +208,19 @@ REST_FRAMEWORK = {
 }
 
 # CORS settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+CORS_ALLOWED_ORIGINS = env_list(
+    "DJANGO_CORS_ALLOWED_ORIGINS",
+    default="http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173",
+)
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False
 
 # CSRF settings
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+CSRF_TRUSTED_ORIGINS = env_list(
+    "DJANGO_CSRF_TRUSTED_ORIGINS",
+    default="http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173",
+)
 
 # Session settings for cross-origin requests
 # For development: use 'Lax' which works with HTTP
@@ -194,7 +248,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Use console 
 # EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = 'your-email@gmail.com'
 # EMAIL_HOST_PASSWORD = 'your-app-password'
-DEFAULT_FROM_EMAIL = 'noreply@example.com'
+DEFAULT_FROM_EMAIL = os.getenv('DJANGO_DEFAULT_FROM_EMAIL', 'noreply@example.com')
 
 # Frontend URL for password reset links
-FRONTEND_URL = 'http://localhost:5173'
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
