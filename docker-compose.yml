@@ -25,15 +25,15 @@ services:
       - "8000:8000"
     volumes:
       - .:/app:delegated
-      - staticfiles:/app/staticfiles
-      - media:/app/media
+      - staticfiles:/app/frontend/staticfiles
+      - media:/app/frontend/media
 
   frontend:
     image: node:20
     container_name: pm_frontend
     working_dir: /app/frontend
     environment:
-      VITE_API_URL: "${VITE_API_URL:-http://localhost:8000}"
+      VITE_API_URL: "${VITE_API_URL:-http://89.32.248.245:8000}"
       HOST: 0.0.0.0
       PORT: 5173
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"

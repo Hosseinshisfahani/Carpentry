@@ -23,6 +23,9 @@ frontend/.vite/
 .git
 .gitignore
 
+# Local helper scripts
+runserver.sh
+
 # Build caches
 *.egg-info/
 build/
